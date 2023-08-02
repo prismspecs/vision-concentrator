@@ -1,3 +1,23 @@
+# Vision Concentrator art installation
+forked with love from [Stable Diffusion WebUI docker](https://github.com/AbdBarho/stable-diffusion-webui-docker/)
+
+# Setup & Install
+## Requirements
++ NVidia drivers
++ Docker
++ NVidia container toolkit
+
+## Installation
+```
+docker compose --profile download up --build
+docker compose --profile auto up --build
+```
+
+# Useage
+```
+docker compose --profile auto up --build
+```
+
 # Stable Diffusion WebUI Docker
 
 Run Stable Diffusion on your machine with a nice UI without any hassle!
