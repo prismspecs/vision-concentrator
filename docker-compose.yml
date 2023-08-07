@@ -30,6 +30,7 @@ services:
     profiles: ["auto"]
     build: ./services/AUTOMATIC1111
     image: sd-auto:62
+    #user: 1000:1000
     environment:
       - CLI_ARGS=--allow-code --medvram --xformers --enable-insecure-extension-access --api
 

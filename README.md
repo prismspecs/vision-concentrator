@@ -6,17 +6,48 @@ forked with love from [Stable Diffusion WebUI docker](https://github.com/AbdBarh
 + NVidia drivers
 + Docker
 + NVidia container toolkit
+```bash
+sudo apt install python3-pip
+pip install -r requirements.txt
+pip install imageio[ffmpeg]
+```
 
 ## Installation
 ```
 docker compose --profile download up --build
 docker compose --profile auto up --build
 ```
+Install my fork of seed travel: https://github.com/prismspecs/seed_travel via the browser interface
+Install my fork of interpolate: https://github.com/prismspecs/interpolate by placing it in the scripts folder directly
 
 # Useage
-```
+First terminal:
+
+```bash
 docker compose --profile auto up --build
 ```
+
+Second terminal:
+
+```bash
+python3 vision-concentrator.py
+```
+
+```bash
+python add-vision.py incoming.dat "prompt"
+```
+
+## Testing
+
+Add a new line to incoming.dat from terminal
+```bash
+echo -e "sample text\n$(cat incoming.dat)" > incoming.dat
+```
+Own the files created
+```bash
+sudo chown -R grayson .
+```
+
 
 # Stable Diffusion WebUI Docker
 
