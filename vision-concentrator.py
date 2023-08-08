@@ -1,4 +1,5 @@
 # TO DO:
+#   loop by connecting last vid to first?
 #   prompt "queue" for prompts already in incoming.dat
 #   upscale
 
@@ -39,7 +40,7 @@ current_seed = 1
 num_interpolation_frames = 30
 num_travel_frames = num_interpolation_frames
 ignore_next_modified = False
-num_steps = 25
+num_steps = 20
 FINAL_WIDTH = 1280
 FINAL_HEIGHT = 720
 SCALED_WIDTH = FINAL_WIDTH/2
@@ -58,6 +59,7 @@ def data_url_to_image(data_url):
     image_data = Image.open(io.BytesIO(
         base64.b64decode(data_url.split(",", 1)[0])))
     return image_data
+
 
 def create_random_image():
     image_size = (FINAL_WIDTH, FINAL_HEIGHT)
@@ -197,9 +199,6 @@ class NewLineHandler(FileSystemEventHandler):
         for i in r['images']:
             seed_images.append(i)
 
-
-
-
         # save seed_images[-1] as seed_t_lastframe_next.png
         image = Image.open(io.BytesIO(
             base64.b64decode(seed_images[-1].split(",", 1)[0])))
@@ -230,7 +229,6 @@ class NewLineHandler(FileSystemEventHandler):
 
             interpolation_prompt = f"{previous_prompt}:1~0 AND {current_prompt}:0~1"
 
-            
             # if seed_t_lastframe.png exists, use it as the previous image
             # otherwise, generate an image of noise
             if not os.path.exists(os.path.join("output", "seed_t_lastframe.png")):
@@ -284,49 +282,36 @@ class NewLineHandler(FileSystemEventHandler):
                 url).resize((FINAL_WIDTH, FINAL_HEIGHT))) for url in interpolate_images]
             seed_frames = [np.array(data_url_to_image(url).resize(
                 (FINAL_WIDTH, FINAL_HEIGHT))) for url in seed_images]
+            
+ 
 
             # save frames as a video using imageio
             # if the video already exists, append to it
-            if os.path.exists(os.path.join("output", "all_visions.mp4")):
-                output_path = os.path.join("output", "all_visions.mp4")
+            vid_path = os.path.join("output", "all_visions.mp4")
+            if os.path.exists(vid_path):
 
-                full_video = imageio.get_reader(
-                    os.path.join("output", "all_visions.mp4"))
+                full_video = []
+                full_video = imageio.get_reader(vid_path)
 
-                with imageio.get_writer(output_path, fps=FPS) as writer:
-                    for frame in interpolate_frames + seed_frames:
-                        writer.append_data(frame)
+                with imageio.get_writer(vid_path, fps=FPS) as writer:
                     for frame in full_video:
+                        writer.append_data(frame)
+                    for frame in interpolate_frames:
+                        writer.append_data(frame)
+                    for frame in seed_frames:
                         writer.append_data(frame)
                     writer.close()
 
             # otherwise, create a new video
             else:
-                output_path = os.path.join("output", "all_visions.mp4")
 
-                with imageio.get_writer(output_path, fps=FPS) as writer:
+                with imageio.get_writer(vid_path, fps=FPS) as writer:
                     for frame in interpolate_frames + seed_frames:
                         writer.append_data(frame)
                     writer.close()
 
-            # re-encode it in ffmpeg
-            # Run the ffmpeg command
-            # command = [
-            #     "ffmpeg",
-            #     "-i", output_path,
-            #     "-c:v", "libx264",
-            #     "-c:a", "aac",
-            #     "-strict", "experimental",
-            #     output_path
-            # ]
 
-            # try:
-            #     subprocess.run(command, check=True)
-            #     print("Video re-encoding completed successfully!")
-            # except subprocess.CalledProcessError as e:
-            #     print("Error:", e)
-
-            print("Video saved:", output_path)
+            print("Video saved:", vid_path)
 
             # rename seed_t_lastframe_next.png to seed_t_lastframe.png
             os.rename(os.path.join("output", "seed_t_lastframe_next.png"),
@@ -338,63 +323,7 @@ class NewLineHandler(FileSystemEventHandler):
             with open(os.path.join("output", "seed.txt"), 'w') as seed_file:
                 seed_file.write(str(current_seed))
 
-            # create a video from the images in r
-            # index = 0
-            # writer = imageio.get_writer(os.path.join(
-            #     "output", "interpolate.mp4"), fps=FPS, quality=10)
-            # for i in r['images']:
-            #     image = Image.open(io.BytesIO(
-            #         base64.b64decode(i.split(",", 1)[0])))
-            #     # image = image.resize((WIDTH, HEIGHT))
-            #     # NEED TO DO UPSCALING !!!
-            #     image = image.resize((FINAL_WIDTH, FINAL_HEIGHT))
-            #     # Convert the image to a NumPy array
-            #     image_np = np.array(image)
-            #     if index == 0:
-            #         image.save(os.path.join("output", "interp_firstframe.png"))
-            #     if index == len(r['images']) - 1:
-            #         image.save(os.path.join("output", "interp_lastframe.png"))
-            #     writer.append_data(image_np)
-            #     index += 1
-            # writer.close()
-
-            # # join interpolate.mp4 and travel.mp4
-            # # REPLACE THIS WITH USING MEMORY RATHER THAN DISK IO
-            # # Read the input videos
-            # interpolate_video = imageio.get_reader(os.path.join("output", "interpolate.mp4"))
-            # travel_video = imageio.get_reader(os.path.join("output", "travel.mp4"))
-
-            # # Get the frames from each video
-            # interpolate_frames = list(interpolate_video)
-            # travel_frames = list(travel_video)
-
-            # # Combine the frames from both videos
-            # combined_frames = interpolate_frames + travel_frames
-
-            # # Create the output video using the combined frames
-            # output_video = imageio.get_writer(imageio.get_reader(os.path.join("output", "combined_new.mp4")), fps=FPS)
-
-            # # Write each frame to the output video
-            # for frame in combined_frames:
-            #     output_video.append_data(frame)
-
-            # # Close the output video
-            # output_video.close()
-
-            # # now add combined_new.mp4 to combined.mp4
-            # # Read the input videos
-            # # if combined.mp4 exists
-            # if os.path.exists(imageio.get_reader(os.path.join("output", "combined.mp4"))):
-
-            #     combined_video = imageio.get_reader(os.path.join("output", "combined.mp4"))
-            #     combined_new_video = imageio.get_reader(os.path.join("output", "combined_new.mp4"))
-            #     combined_frames = list(combined_video)
-            #     combined_new_frames = list(combined_new_video)
-            #     combined_frames = combined_frames + combined_new_frames
-            #     output_video = imageio.get_writer(os.path.join("output", "combined.mp4"), fps=FPS)
-            #     for frame in combined_frames:
-            #         output_video.append_data(frame)
-            #     output_video.close()
+          
 
         subprocess.run(self.command, shell=True)
 
