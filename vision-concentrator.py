@@ -1,6 +1,5 @@
 # TO DO:
-#   send prompts on run
-#   seed
+#   prompt "queue" for prompts already in incoming.dat
 #   upscale
 
 # watcher
@@ -14,11 +13,12 @@ import json
 import requests
 import io
 import base64
-from PIL import Image, PngImagePlugin
+from PIL import Image, PngImagePlugin, ImageDraw
 import datetime
 import os
 import numpy as np
 import imageio
+import random
 
 
 class Color:
@@ -37,11 +37,13 @@ url = "http://127.0.0.1:7860"
 path = "output/txt2img/dreams"
 current_seed = 1
 num_interpolation_frames = 30
-num_travel_frames = 30
-FINAL_WIDTH = 1024
-FINAL_HEIGHT = 1024
-WIDTH = 512
-HEIGHT = 512
+num_travel_frames = num_interpolation_frames
+ignore_next_modified = False
+num_steps = 25
+FINAL_WIDTH = 1280
+FINAL_HEIGHT = 720
+SCALED_WIDTH = FINAL_WIDTH/2
+SCALED_HEIGHT = FINAL_HEIGHT/2
 FPS = 15
 
 
@@ -57,6 +59,23 @@ def data_url_to_image(data_url):
         base64.b64decode(data_url.split(",", 1)[0])))
     return image_data
 
+def create_random_image():
+    image_size = (FINAL_WIDTH, FINAL_HEIGHT)
+
+    # create a new image with a white background then noise
+    image = Image.new("RGB", image_size, "white")
+    draw = ImageDraw.Draw(image)
+    for y in range(image_size[1]):
+        for x in range(image_size[0]):
+            r = random.randint(0, 255)
+            g = random.randint(0, 255)
+            b = random.randint(0, 255)
+            draw.point((x, y), (r, g, b))
+
+    image.save(os.path.join("output", "seed_t_lastframe.png"))
+
+    return None
+
 
 # when a new line is added to incoming.dat ...
 class NewLineHandler(FileSystemEventHandler):
@@ -65,7 +84,17 @@ class NewLineHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
 
+        global ignore_next_modified
+
+        print(Color.GREEN + " -> on_modified called")
+
         if event.src_path.endswith('incoming.dat') and event.is_directory == False:
+
+            if ignore_next_modified:
+                ignore_next_modified = False
+                return
+
+            print(Color.RED + " -> incoming.dat was modified")
 
             # read first line of rendered.dat to previous_prompt
             with open('rendered.dat', 'r') as rendered:
@@ -94,6 +123,8 @@ class NewLineHandler(FileSystemEventHandler):
                     # remove only the new lines from incoming.dat
                     with open('incoming.dat', 'w') as incoming:
                         incoming.writelines(lines[:-len(new_line)])
+                        # since this will trigger on_modified again...
+                        ignore_next_modified = True
 
                     # update last_line_count
                     self.last_line_count = len(lines) - 1
@@ -101,45 +132,49 @@ class NewLineHandler(FileSystemEventHandler):
                     self.run_command_on_new_line(new_line[0], previous_prompt)
 
     def on_created(self, event):
+        print(Color.GREEN + " -> on_created called")
         self.on_modified(event)
 
     def run_command_on_new_line(self, new_line, previous_prompt):
+        print(Color.GREEN + " -> run_command_on_new_line called")
+        global current_seed
+
         # for line in new_line:
 
         current_prompt = new_line.strip()
 
         filename = get_current_datetime_string() + "||" + current_prompt + ".mp4"
 
-        print(Color.YELLOW + "preparing new line:", current_prompt,
-              Color.CYAN, "\nfilename:", filename, Color.RESET)
+        dest_seed = 2 if current_seed == 1 else 1
 
-        dest_seed = "2" if current_seed == 1 else "1"
+        print(Color.YELLOW + "preparing new line:", current_prompt,
+              Color.CYAN, "\nfilename:", filename, Color.MAGENTA + "\ncurrent seed:", current_seed, "destination seed:", dest_seed, Color.RESET)
 
         # payload for seed travel
         payload = {
             "prompt": current_prompt,
             "seed": current_seed,
-            "width": 512,
-            "height": 512,
-            "steps": 20,
+            "width": SCALED_WIDTH,
+            "height": SCALED_HEIGHT,
+            "steps": num_steps,
             "sampler_index": "DPM++ 2M",
             "script_name": "Seed travel",
             "script_args": [
                 "False",    # rnd_seed
                 "4.0",      # seed count
-                dest_seed,  # dest seed
-                f'0-1[{num_travel_frames}]',        # steps
+                str(dest_seed),  # dest seed
+                str(num_travel_frames),        # steps
                 "Linear",   # curve
                 "3",        # curve strength
                 "False",    # loopback
-                "15",       # video fps
+                str(FPS),       # video fps
                 "False",    # show images
                 "False",    # compare paths
                 "False",    # allow def sampler
                 "0",        # bump_seed
                 "0",        # lead in out
                 "Lanczos",  # upscale method
-                "2.0",      # upscale ratio
+                "2.0",      # upscale ratio -- was 2.0
                 "True",     # use cache
                 "0",        # ssim diff
                 "0",        # ssim ccrop
@@ -149,7 +184,7 @@ class NewLineHandler(FileSystemEventHandler):
                 "False",    # rife drop
                 "True",     # save stats
                 "output/",     # save path -- not used
-                filename,  # save filename
+                filename,  # save filename -- not used
             ]
         }
 
@@ -161,6 +196,9 @@ class NewLineHandler(FileSystemEventHandler):
         seed_images = []
         for i in r['images']:
             seed_images.append(i)
+
+
+
 
         # save seed_images[-1] as seed_t_lastframe_next.png
         image = Image.open(io.BytesIO(
@@ -184,8 +222,6 @@ class NewLineHandler(FileSystemEventHandler):
         #     index += 1
         # writer.close()
 
-        print("the current prev prompt is " + previous_prompt)
-
         # now do interpolation if there is a previous prompt
         if previous_prompt != "":
 
@@ -194,9 +230,12 @@ class NewLineHandler(FileSystemEventHandler):
 
             interpolation_prompt = f"{previous_prompt}:1~0 AND {current_prompt}:0~1"
 
-            # current_image = os.path.join("output", "seed_t_firstframe.png")
-            # c_image_encoded = base64.b64encode(
-            #     open(current_image, 'rb').read()).decode('ascii')
+            
+            # if seed_t_lastframe.png exists, use it as the previous image
+            # otherwise, generate an image of noise
+            if not os.path.exists(os.path.join("output", "seed_t_lastframe.png")):
+                # generate an image of noise and save to seed_t_lastframe.png
+                create_random_image()
 
             previous_image = os.path.join("output", "seed_t_lastframe.png")
             p_image_encoded = base64.b64encode(
@@ -210,9 +249,9 @@ class NewLineHandler(FileSystemEventHandler):
                 ],
                 "prompt": interpolation_prompt,
                 "seed": current_seed,
-                "steps": 25,
-                "width": 512,
-                "height": 512,
+                "steps": num_steps,
+                "width": FINAL_WIDTH,
+                "height": FINAL_HEIGHT,
                 "script_name": "Interpolate",
                 "script_args": [
                     "data:image/png;base64," + current_image,    # init_img2
@@ -270,14 +309,34 @@ class NewLineHandler(FileSystemEventHandler):
                         writer.append_data(frame)
                     writer.close()
 
+            # re-encode it in ffmpeg
+            # Run the ffmpeg command
+            # command = [
+            #     "ffmpeg",
+            #     "-i", output_path,
+            #     "-c:v", "libx264",
+            #     "-c:a", "aac",
+            #     "-strict", "experimental",
+            #     output_path
+            # ]
+
+            # try:
+            #     subprocess.run(command, check=True)
+            #     print("Video re-encoding completed successfully!")
+            # except subprocess.CalledProcessError as e:
+            #     print("Error:", e)
+
             print("Video saved:", output_path)
 
             # rename seed_t_lastframe_next.png to seed_t_lastframe.png
             os.rename(os.path.join("output", "seed_t_lastframe_next.png"),
                       os.path.join("output", "seed_t_lastframe.png"))
-            
+
             # set seed
             current_seed = dest_seed
+            # write current_seed to seed.txt
+            with open(os.path.join("output", "seed.txt"), 'w') as seed_file:
+                seed_file.write(str(current_seed))
 
             # create a video from the images in r
             # index = 0
@@ -341,9 +400,22 @@ class NewLineHandler(FileSystemEventHandler):
 
 
 if __name__ == "__main__":
+
+    print(Color.GREEN + " -> _main_ called")
     input_file = "incoming.dat"
+
     command_to_run = "echo 'done rendering'"
     event_handler = NewLineHandler(command_to_run)
+
+    # load relevant configs
+    # load seed from seed.txt
+    if os.path.exists(os.path.join("output", "seed.txt")):
+        with open(os.path.join("output", "seed.txt"), 'r') as seed_file:
+            current_seed = int(seed_file.read())
+    else:
+        with open(os.path.join("output", "seed.txt"), 'w') as seed_file:
+            seed_file.write(str(current_seed))
+
     event_handler.last_line_count = 0
     # set last line count to number of lines in incoming.dat
     # with open(input_file, 'r') as file:

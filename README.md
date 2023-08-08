@@ -19,6 +19,11 @@ docker compose --profile auto up --build
 ```
 Install my fork of seed travel: https://github.com/prismspecs/seed_travel via the browser interface
 Install my fork of interpolate: https://github.com/prismspecs/interpolate by placing it in the scripts folder directly
+Install Ultimate SD Upscaler
+```bash
+# cd into extensions folder
+git clone https://github.com/Coyote-A/ultimate-upscale-for-automatic1111.git
+```
 
 # Useage
 First terminal:
