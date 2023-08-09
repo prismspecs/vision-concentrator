@@ -35,7 +35,7 @@ python3 vision-concentrator.py
 
 Third terminal:
 ```bash
-python add-vision.py incoming.dat "prompt"
+python add-vision.py incoming.dat
 ```
 
 ## Testing
