@@ -3,3 +3,4 @@ watchdog
 imageio
 numpy
 pyautogui
+opencv-python
