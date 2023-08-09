@@ -1,13 +1,13 @@
 import cv2
 import time
-import pyautogui
+# import pyautogui
 
 widow_name = "window"
 videoFileName = "output/all_visions.mp4"
 
 # Hide the cursor
-pyautogui.FAILSAFE = False
-pyautogui.moveTo(3000, 3000)
+# pyautogui.FAILSAFE = False
+# pyautogui.moveTo(3000, 3000)
 
 # Loop for playing video in repeat model
 while True:
