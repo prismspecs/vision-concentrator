@@ -37,8 +37,8 @@ url = "http://127.0.0.1:7860"
 
 path = "output/txt2img/dreams"
 current_seed = 1
-num_interpolation_frames = 30
-num_travel_frames = num_interpolation_frames
+num_interpolation_frames = 10
+num_travel_frames = 50
 ignore_next_modified = False
 num_steps = 20
 FINAL_WIDTH = 1280
@@ -89,6 +89,9 @@ class NewLineHandler(FileSystemEventHandler):
         global ignore_next_modified
 
         print(Color.GREEN + " -> on_modified called")
+        print(Color.MAGENTA, "last line count:", self.last_line_count)
+
+        
 
         if event.src_path.endswith('incoming.dat') and event.is_directory == False:
 
@@ -108,10 +111,14 @@ class NewLineHandler(FileSystemEventHandler):
                 print("opening incoming.dat")
                 # read all lines to a list
                 lines = file.readlines()
-                # if there are more lines than last time we checked
-                if len(lines) > self.last_line_count:
+                
+                # if there is at least one line
+                if len(lines) > 0:
+
                     # get only one new line
-                    new_line = lines[self.last_line_count:]
+                    # new_line = lines[self.last_line_count:]
+                    new_line = lines[0]
+                    
                     print("got this:", repr(new_line))
 
                     # if rendered.dat does not exist, create it
@@ -122,16 +129,17 @@ class NewLineHandler(FileSystemEventHandler):
                         content = rendered.read()
                         rendered.seek(0, 0)
                         rendered.write(''.join(new_line) + content)
+                        
                     # remove only the new lines from incoming.dat
                     with open('incoming.dat', 'w') as incoming:
-                        incoming.writelines(lines[:-len(new_line)])
+                        incoming.writelines(lines[1:])
                         # since this will trigger on_modified again...
                         ignore_next_modified = True
 
                     # update last_line_count
                     self.last_line_count = len(lines) - 1
                     # run command on new lines
-                    self.run_command_on_new_line(new_line[0], previous_prompt)
+                    self.run_command_on_new_line(new_line, previous_prompt)
 
     def on_created(self, event):
         print(Color.GREEN + " -> on_created called")
@@ -147,7 +155,7 @@ class NewLineHandler(FileSystemEventHandler):
 
         filename = get_current_datetime_string() + "||" + current_prompt + ".mp4"
 
-        dest_seed = 2 if current_seed == 1 else 1
+        dest_seed = 100 if current_seed == 1 else 1
 
         print(Color.YELLOW + "preparing new line:", current_prompt,
               Color.CYAN, "\nfilename:", filename, Color.MAGENTA + "\ncurrent seed:", current_seed, "destination seed:", dest_seed, Color.RESET)

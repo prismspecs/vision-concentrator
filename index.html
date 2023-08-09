@@ -1,0 +1,105 @@
+<html>
+
+<head>
+    <title>Transformation Terminal</title>
+    <style>
+        html {
+            box-sizing: border-box;
+        }
+
+        *,
+        *:before,
+        *:after {
+            box-sizing: inherit;
+        }
+
+        body {
+            height: 100%;
+            background-color: #000;
+            font-family: monospace;
+            font-size: 50px;
+        }
+
+        .terminal_input {
+            overflow: hidden;
+            background-color: black;
+            color: green;
+            font-size: 1em;
+            /* border: none; */
+            width: 100%;
+            padding:1em;
+        }
+
+        #old_commands {
+            color: #115511;
+        }
+
+        #old_commands p {
+            padding-top:1em;
+            margin-left:1em;
+        }
+
+        #text_area_container {
+            position: fixed;
+            bottom: 0px;
+            width:100%;
+            margin:0;
+            padding:0;
+            left:0px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="old_commands">
+
+
+    </div>
+    <div id="text_area_container">
+        <textarea id="text_area" rows="1" class="terminal_input" placeholder="enter dream here..."></textarea>
+    </div>
+
+    <!-- <input type="text" placeholder="enter dream here..."> -->
+
+    <script>
+
+        const node = document.getElementById("text_area");
+
+        function change_height() {
+            node.style.height = "1px";
+            node.style.height = (node.scrollHeight) + "px";
+        }
+
+        node.addEventListener("keyup", function (event) {
+            change_height();
+
+            if (event.key === "Enter") {
+
+                var d = document.getElementById("old_commands");
+                let p = document.createElement("p");
+                p.innerHTML = node.value;
+                d.prepend(p);
+
+                // save node.value as first line of textfile output/incoming.dat
+                
+                
+
+
+                node.value = "";
+                change_height();
+
+            }
+        });
+
+
+
+        function handle_terminal_input(elem) {  /* javascript */
+
+            if (elem.key === 'Enter') {
+
+            }
+        }
+    </script>
+</body>
+
+</html>
