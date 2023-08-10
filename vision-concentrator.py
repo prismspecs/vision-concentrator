@@ -20,7 +20,7 @@ import os
 import numpy as np
 import imageio
 import random
-
+import shutil
 
 class Color:
     RED = '\033[91m'
@@ -38,7 +38,7 @@ url = "http://127.0.0.1:7860"
 path = "output/txt2img/dreams"
 current_seed = 1
 num_interpolation_frames = 10
-num_travel_frames = 50
+num_travel_frames = 40
 ignore_next_modified = False
 num_steps = 20
 FINAL_WIDTH = 1280
@@ -163,6 +163,7 @@ class NewLineHandler(FileSystemEventHandler):
         # payload for seed travel
         payload = {
             "prompt": current_prompt,
+            "negative_prompt": "nsfw, text",
             "seed": current_seed,
             "width": SCALED_WIDTH,
             "height": SCALED_HEIGHT,
@@ -170,7 +171,7 @@ class NewLineHandler(FileSystemEventHandler):
             "sampler_index": "DPM++ 2M",
             "script_name": "Seed travel",
             "script_args": [
-                "False",    # rnd_seed
+                "False",    # rnd_seed 
                 "4.0",      # seed count
                 str(dest_seed),  # dest seed
                 str(num_travel_frames),        # steps
@@ -291,18 +292,43 @@ class NewLineHandler(FileSystemEventHandler):
             seed_frames = [np.array(data_url_to_image(url).resize(
                 (FINAL_WIDTH, FINAL_HEIGHT))) for url in seed_images]
             
+            
+            
+            test_path = os.path.join("output", "new-" + get_current_datetime_string() + ".mp4")
+            if True:
+
+                with imageio.get_writer(test_path, fps=FPS) as writer:
+                    for frame in interpolate_frames:
+                        writer.append_data(frame)
+                    for frame in seed_frames:
+                        writer.append_data(frame)
+                    writer.close()
  
+ 
+ 
+ 
+ 
+            temp_path = os.path.join("output", "all_visions.mp4")
+            prev_video = []
+            if os.path.exists(temp_path):
+                prev_video = imageio.get_reader(temp_path)
+                print("num frames in videofile:", prev_video._meta['nframes'])
+
+                
+            
+                
 
             # save frames as a video using imageio
             # if the video already exists, append to it
             vid_path = os.path.join("output", "all_visions.mp4")
             if os.path.exists(vid_path):
 
-                full_video = []
-                full_video = imageio.get_reader(vid_path)
+                #full_video = []
+                #full_video = imageio.get_reader(vid_path)
+                #print("num frames in videofile:", full_video._meta['nframes'])
 
                 with imageio.get_writer(vid_path, fps=FPS) as writer:
-                    for frame in full_video:
+                    for frame in prev_video:
                         writer.append_data(frame)
                     for frame in interpolate_frames:
                         writer.append_data(frame)
@@ -312,7 +338,7 @@ class NewLineHandler(FileSystemEventHandler):
 
             # otherwise, create a new video
             else:
-
+                print("all_visions.mp4 did not exist, creating...")
                 with imageio.get_writer(vid_path, fps=FPS) as writer:
                     for frame in interpolate_frames + seed_frames:
                         writer.append_data(frame)

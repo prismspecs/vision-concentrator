@@ -3,7 +3,7 @@ import time
 # import pyautogui
 
 widow_name = "window"
-videoFileName = "output/all_visions.mp4"
+videoFileName = "output/all_visions2.mp4"
 
 # Hide the cursor
 # pyautogui.FAILSAFE = False
@@ -17,6 +17,7 @@ while True:
     cv2.namedWindow(widow_name, cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty(
         widow_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.moveWindow(widow_name,1600,0)
     
 
     
@@ -32,7 +33,7 @@ while True:
         else:
             break
     
-        time.sleep(1 / 15)
+        time.sleep(1 / 8)
 
     # Close Repeat Video Loop
     if (isClose):
