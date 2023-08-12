@@ -7,6 +7,7 @@ forked with love from [Stable Diffusion WebUI docker](https://github.com/AbdBarh
 + Docker
 + NVidia container toolkit
 ```bash
+sudo apt install ffmpeg
 sudo apt install python3-pip
 pip install -r requirements.txt
 pip install imageio[ffmpeg]
@@ -25,7 +26,7 @@ Install my fork of interpolate: https://github.com/prismspecs/interpolate by pla
 # Useage
 First terminal:
 ```bash
-docker compose --profile auto up --build
+docker compose --profile auto up
 ```
 
 Second terminal:

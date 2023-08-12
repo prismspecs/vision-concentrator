@@ -21,6 +21,7 @@ import numpy as np
 import imageio
 import random
 import shutil
+import ffmpeg
 
 class Color:
     RED = '\033[91m'
@@ -37,8 +38,8 @@ url = "http://127.0.0.1:7860"
 
 path = "output/txt2img/dreams"
 current_seed = 1
-num_interpolation_frames = 10
-num_travel_frames = 40
+num_interpolation_frames = 10 #10
+num_travel_frames = 30 #40
 ignore_next_modified = False
 num_steps = 20
 FINAL_WIDTH = 1280
@@ -91,8 +92,6 @@ class NewLineHandler(FileSystemEventHandler):
         print(Color.GREEN + " -> on_modified called")
         print(Color.MAGENTA, "last line count:", self.last_line_count)
 
-        
-
         if event.src_path.endswith('incoming.dat') and event.is_directory == False:
 
             if ignore_next_modified:
@@ -111,25 +110,25 @@ class NewLineHandler(FileSystemEventHandler):
                 print("opening incoming.dat")
                 # read all lines to a list
                 lines = file.readlines()
-                
+
                 # if there is at least one line
                 if len(lines) > 0:
 
                     # get only one new line
-                    # new_line = lines[self.last_line_count:]
                     new_line = lines[0]
-                    
+
                     print("got this:", repr(new_line))
 
                     # if rendered.dat does not exist, create it
                     if not os.path.exists('rendered.dat'):
                         open('rendered.dat', 'w').close()
+
                     # add new_line to rendered.dat at top of file, plus a newline character
                     with open('rendered.dat', 'r+') as rendered:
                         content = rendered.read()
                         rendered.seek(0, 0)
                         rendered.write(''.join(new_line) + content)
-                        
+
                     # remove only the new lines from incoming.dat
                     with open('incoming.dat', 'w') as incoming:
                         incoming.writelines(lines[1:])
@@ -171,7 +170,7 @@ class NewLineHandler(FileSystemEventHandler):
             "sampler_index": "DPM++ 2M",
             "script_name": "Seed travel",
             "script_args": [
-                "False",    # rnd_seed 
+                "False",    # rnd_seed
                 "4.0",      # seed count
                 str(dest_seed),  # dest seed
                 str(num_travel_frames),        # steps
@@ -291,61 +290,64 @@ class NewLineHandler(FileSystemEventHandler):
                 url).resize((FINAL_WIDTH, FINAL_HEIGHT))) for url in interpolate_images]
             seed_frames = [np.array(data_url_to_image(url).resize(
                 (FINAL_WIDTH, FINAL_HEIGHT))) for url in seed_images]
-            
-            
-            
-            test_path = os.path.join("output", "new-" + get_current_datetime_string() + ".mp4")
-            if True:
 
-                with imageio.get_writer(test_path, fps=FPS) as writer:
-                    for frame in interpolate_frames:
-                        writer.append_data(frame)
-                    for frame in seed_frames:
-                        writer.append_data(frame)
-                    writer.close()
- 
- 
- 
- 
- 
-            temp_path = os.path.join("output", "all_visions.mp4")
-            prev_video = []
-            if os.path.exists(temp_path):
-                prev_video = imageio.get_reader(temp_path)
-                print("num frames in videofile:", prev_video._meta['nframes'])
+            # if output/single_vids doesnt exist, create it
+            if not os.path.exists("output/single_vids"):
+                os.mkdir("output/single_vids")
 
-                
-            
-                
+            # save frames as a video using imageio for interp and seed travel
+            interp_and_seed_vid_path = os.path.join(
+                "output/single_vids", "new-" + get_current_datetime_string() + ".mp4")
+
+            with imageio.get_writer(interp_and_seed_vid_path, fps=FPS) as writer:
+                for frame in interpolate_frames:
+                    writer.append_data(frame)
+                for frame in seed_frames:
+                    writer.append_data(frame)
+                writer.close()
+
+            all_visions_path = os.path.join("output", "all_visions.mp4")
+            if os.path.exists(all_visions_path):
+
+                # copy all_visions.mp4 to all_visions_old.mp4
+                shutil.copyfile(all_visions_path, os.path.join(
+                    "output", "all_visions_old.mp4"))
+                all_visions_copy = os.path.join("output", "all_visions_old.mp4")
+
+                input_files = [all_visions_copy, interp_and_seed_vid_path]
+                input_streams = [ffmpeg.input(file) for file in input_files]
+                concatenated = ffmpeg.concat(*input_streams, v=1, a=0)
+                output_filename = all_visions_path
+                ffmpeg.output(concatenated, output_filename).run(overwrite_output=True)
+
+                print("Concatenation completed successfully.")
+
+            else:
+                print("all_visions.mp4 did not exist, copying interp+seed travel vid...")
+                # copy interp_and_seed_vid_path to all_visions_path
+                shutil.copyfile(interp_and_seed_vid_path, all_visions_path)
 
             # save frames as a video using imageio
             # if the video already exists, append to it
-            vid_path = os.path.join("output", "all_visions.mp4")
-            if os.path.exists(vid_path):
+            # vid_path = os.path.join("output", "all_visions.mp4")
+            # if os.path.exists(vid_path):
 
-                #full_video = []
-                #full_video = imageio.get_reader(vid_path)
-                #print("num frames in videofile:", full_video._meta['nframes'])
+            #     # full_video = []
+            #     # full_video = imageio.get_reader(vid_path)
+            #     # print("num frames in videofile:", full_video._meta['nframes'])
 
-                with imageio.get_writer(vid_path, fps=FPS) as writer:
-                    for frame in prev_video:
-                        writer.append_data(frame)
-                    for frame in interpolate_frames:
-                        writer.append_data(frame)
-                    for frame in seed_frames:
-                        writer.append_data(frame)
-                    writer.close()
+            #     with imageio.get_writer(vid_path, fps=FPS) as writer:
+            #         for frame in prev_video:
+            #             writer.append_data(frame)
+            #         for frame in interpolate_frames:
+            #             writer.append_data(frame)
+            #         for frame in seed_frames:
+            #             writer.append_data(frame)
+            #         writer.close()
 
             # otherwise, create a new video
-            else:
-                print("all_visions.mp4 did not exist, creating...")
-                with imageio.get_writer(vid_path, fps=FPS) as writer:
-                    for frame in interpolate_frames + seed_frames:
-                        writer.append_data(frame)
-                    writer.close()
 
-
-            print("Video saved:", vid_path)
+            print("video saved")
 
             # rename seed_t_lastframe_next.png to seed_t_lastframe.png
             os.rename(os.path.join("output", "seed_t_lastframe_next.png"),
@@ -356,8 +358,6 @@ class NewLineHandler(FileSystemEventHandler):
             # write current_seed to seed.txt
             with open(os.path.join("output", "seed.txt"), 'w') as seed_file:
                 seed_file.write(str(current_seed))
-
-          
 
         subprocess.run(self.command, shell=True)
 

@@ -3,7 +3,7 @@ import time
 # import pyautogui
 
 widow_name = "window"
-videoFileName = "output/all_visions2.mp4"
+videoFileName = "output/all_visions.mp4"
 
 # Hide the cursor
 # pyautogui.FAILSAFE = False

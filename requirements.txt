@@ -4,3 +4,4 @@ imageio
 numpy
 pyautogui
 opencv-python
+ffmpeg-python
