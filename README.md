@@ -19,9 +19,12 @@ docker compose --profile download up --build
 docker compose --profile auto up --build
 ```
 
-Install my fork of seed travel: https://github.com/prismspecs/seed_travel via the browser interface
-Install my fork of interpolate: https://github.com/prismspecs/interpolate by placing it in the scripts folder directly
-
++ Install my fork of seed travel: https://github.com/prismspecs/seed_travel via the browser interface
++ Install my fork of interpolate: https://github.com/prismspecs/interpolate by placing it in the scripts folder directly
++ Add start.sh to startup programs
+```
+gnome-terminal -- bash -c "/path/to/start.sh; exec bash"
+```
 
 # Useage
 First terminal:
