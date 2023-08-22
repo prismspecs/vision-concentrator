@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # terminal 1: docker container running 1111
-gnome-terminal -- bash -c "docker compose --profile auto up" &
+gnome-terminal -- bash -c "docker compose --profile auto up" & sleep 5
 
 # terminal 2: vision-concentrator.py (main script)
 gnome-terminal -- bash -c "python3 vision-concentrator.py" &
