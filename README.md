@@ -24,7 +24,6 @@ docker compose --profile auto up --build
 + Add vision-concentrator to startup
 ```
 gnome-terminal --working-directory=/home/grayson/workbench/vision-concentrator -- bash -c "/home/grayson/workbench/vision-concentrator/start.sh"
-
 ```
 
 # Useage
