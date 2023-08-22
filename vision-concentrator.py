@@ -1,6 +1,6 @@
 # TO DO:
+#   test new dest_seed method
 #   loop by connecting last vid to first?
-#   prompt "queue" for prompts already in incoming.dat
 #   upscale
 
 # watcher
@@ -154,7 +154,9 @@ class NewLineHandler(FileSystemEventHandler):
 
         filename = get_current_datetime_string() + "||" + current_prompt + ".mp4"
 
-        dest_seed = 100 if current_seed == 1 else 1
+        #dest_seed = 100 if current_seed == 1 else 1
+        # make dest_seed a random int
+        dest_seed = random.randint(1, 9999)
 
         print(Color.YELLOW + "preparing new line:", current_prompt,
               Color.CYAN, "\nfilename:", filename, Color.MAGENTA + "\ncurrent seed:", current_seed, "destination seed:", dest_seed, Color.RESET)
