@@ -6,8 +6,8 @@ gnome-terminal -- bash -c "docker compose --profile auto up"
 # terminal 2: vision-concentrator.py (main script)
 gnome-terminal -- bash -c "python3 vision-concentrator.py"
 
-# terminal 3: text input script
-gnome-terminal -- bash -c "python3 add-vision.py incoming.dat"
+# terminal 3: text input script (with larger font size and fullscreen)
+gnome-terminal --zoom 3 --full-screen -- bash -c "python3 add-vision.py incoming.dat"
 
 # terminal 4: video player
 gnome-terminal -- bash -c "python3 vision-player.py"
