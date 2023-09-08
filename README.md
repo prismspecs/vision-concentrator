@@ -1,5 +1,6 @@
-# Vision Concentrator art installation
+# Vision Concentrator art installation=
 forked with love from [Stable Diffusion WebUI docker](https://github.com/AbdBarho/stable-diffusion-webui-docker/)
+currently using google translate which requires a network connection, but I could in the future try dl-translate or argostranslate for offline translation
 
 # Setup & Install
 ## Requirements
@@ -27,6 +28,11 @@ gnome-terminal --working-directory=/home/grayson/workbench/vision-concentrator -
 ```
 
 # Useage
+```bash
+./start.sh
+```
+
+## Old method:
 First terminal:
 ```bash
 docker compose --profile auto up

@@ -5,8 +5,6 @@
 # watcher
 import time
 import subprocess
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 
 # requests etc
 import json
@@ -22,6 +20,8 @@ import random
 import shutil
 import ffmpeg
 
+import sys
+
 class Color:
     RED = '\033[91m'
     GREEN = '\033[92m'
@@ -31,12 +31,17 @@ class Color:
     CYAN = '\033[96m'
     RESET = '\033[0m'
 
+# clear the terminal
+print("\033c", end="")
+# change text size
+print("\033[8;50;100t")
 
 url = "http://127.0.0.1:7860"
 
 
 path = "output/txt2img/dreams"
 current_seed = 1
+previous_prompt = ""
 num_interpolation_frames = 10 #10
 num_travel_frames = 30 #40
 ignore_next_modified = False
@@ -74,94 +79,20 @@ def create_random_image():
             b = random.randint(0, 255)
             draw.point((x, y), (r, g, b))
 
-    image.save(os.path.join(working_dir, "seed_t_lastframe.png"))
+    image.save(os.path.join("output", "seed_t_lastframe.png"))
 
     return None
 
 
-# when a new line is added to incoming.dat ...
-class NewLineHandler(FileSystemEventHandler):
-    def __init__(self, command):
-        self.command = command
 
-    def on_modified(self, event):
-
-        global ignore_next_modified
-
-        print(Color.GREEN + " -> on_modified called")
-        print(Color.MAGENTA, "last line count:", self.last_line_count)
-
-        if event.src_path.endswith('incoming.dat') and event.is_directory == False:
-
-            if ignore_next_modified:
-                ignore_next_modified = False
-                return
-
-            print(Color.RED + " -> incoming.dat was modified")
-
-            # read first line of rendered.dat to previous_prompt
-            # open rendered.dat in the working directory
-            rendered_dat = os.path.join(working_dir, "rendered.dat")
-
-            # create rendered_dat if it doesnt exist
-            if not os.path.exists(rendered_dat):
-                open(rendered_dat, 'w').close()
-
-
-            with open(rendered_dat, 'r') as rendered:
-                previous_prompt = rendered.readline().strip()
-                print(Color.YELLOW + "previous prompt:",
-                      previous_prompt, Color.BLUE)
-
-            with open(event.src_path, 'r') as file:
-                print("opening incoming.dat")
-                # read all lines to a list
-                lines = file.readlines()
-
-                # if there is at least one line
-                if len(lines) > 0:
-
-                    # get only one new line
-                    new_line = lines[0]
-
-                    print("got this:", repr(new_line))
-
-                    # if rendered.dat does not exist, create it
-                    if not os.path.exists(rendered_dat):
-                        open(rendered_dat, 'w').close()
-
-                    # add new_line to rendered.dat at top of file, plus a newline character
-                    with open(rendered_dat, 'r+') as rendered:
-                        content = rendered.read()
-                        rendered.seek(0, 0)
-                        rendered.write(''.join(new_line) + content)
-
-                    # remove only the new lines from incoming.dat
-                    with open(input_file, 'w') as incoming:
-                        incoming.writelines(lines[1:])
-                        # since this will trigger on_modified again...
-                        ignore_next_modified = True
-
-                    # update last_line_count
-                    self.last_line_count = len(lines) - 1
-                    # run command on new lines
-                    self.run_command_on_new_line(new_line, previous_prompt)
-
-    def on_created(self, event):
-        print(Color.GREEN + " -> on_created called")
-        self.on_modified(event)
-
-    def run_command_on_new_line(self, new_line, previous_prompt):
-        print(Color.GREEN + " -> run_command_on_new_line called")
+def new_prompt(new_line):
+        # print(Color.GREEN + " -> run_command_on_new_line called")
         global current_seed
-
-        # for line in new_line:
 
         current_prompt = new_line.strip()
 
         filename = get_current_datetime_string() + "||" + current_prompt + ".mp4"
 
-        #dest_seed = 100 if current_seed == 1 else 1
         # make dest_seed a random int
         dest_seed = random.randint(1, 9999)
 
@@ -220,7 +151,7 @@ class NewLineHandler(FileSystemEventHandler):
         image = Image.open(io.BytesIO(
             base64.b64decode(seed_images[-1].split(",", 1)[0])))
         image = image.resize((FINAL_WIDTH, FINAL_HEIGHT))
-        image.save(os.path.join(working_dir, "seed_t_lastframe_next.png"))
+        image.save(os.path.join("output", "seed_t_lastframe_next.png"))
 
 
         # now do interpolation if there is a previous prompt
@@ -233,11 +164,11 @@ class NewLineHandler(FileSystemEventHandler):
 
             # if seed_t_lastframe.png exists, use it as the previous image
             # otherwise, generate an image of noise
-            if not os.path.exists(os.path.join(working_dir, "seed_t_lastframe.png")):
+            if not os.path.exists(os.path.join("output", "seed_t_lastframe.png")):
                 # generate an image of noise and save to seed_t_lastframe.png
                 create_random_image()
 
-            previous_image = os.path.join(working_dir, "seed_t_lastframe.png")
+            previous_image = os.path.join("output", "seed_t_lastframe.png")
             p_image_encoded = base64.b64encode(
                 open(previous_image, 'rb').read()).decode('ascii')
 
@@ -300,13 +231,13 @@ class NewLineHandler(FileSystemEventHandler):
                     writer.append_data(frame)
                 writer.close()
 
-            all_visions_path = os.path.join(working_dir, "all_visions.mp4")
+            all_visions_path = os.path.join("output", "all_visions.mp4")
             if os.path.exists(all_visions_path):
 
                 # copy all_visions.mp4 to all_visions_old.mp4
                 shutil.copyfile(all_visions_path, os.path.join(
-                    working_dir, "all_visions_old.mp4"))
-                all_visions_copy = os.path.join(working_dir, "all_visions_old.mp4")
+                    "output", "all_visions_old.mp4"))
+                all_visions_copy = os.path.join("output", "all_visions_old.mp4")
 
                 input_files = [all_visions_copy, interp_and_seed_vid_path]
                 input_streams = [ffmpeg.input(file) for file in input_files]
@@ -324,54 +255,71 @@ class NewLineHandler(FileSystemEventHandler):
             print("video saved")
 
             # rename seed_t_lastframe_next.png to seed_t_lastframe.png
-            os.rename(os.path.join(working_dir, "seed_t_lastframe_next.png"),
-                      os.path.join(working_dir, "seed_t_lastframe.png"))
+            os.rename(os.path.join("output", "seed_t_lastframe_next.png"),
+                      os.path.join("output", "seed_t_lastframe.png"))
 
             # set seed
             current_seed = dest_seed
             # write current_seed to seed.txt
-            with open(os.path.join(working_dir, "seed.txt"), 'w') as seed_file:
+            with open(os.path.join("output", "seed.txt"), 'w') as seed_file:
                 seed_file.write(str(current_seed))
 
         subprocess.run(self.command, shell=True)
 
 
+
+
+
+    
+
+
+
+def write_prompt_to_file(file_path, prompt):
+    try:
+        with open(file_path, 'a') as f:  # Open the file in append mode ('a')
+            f.write(prompt + '\n')
+
+        print("Successfully recorded your dream " +
+              Color.YELLOW + prompt + Color.RESET)
+        print("\n")
+
+    except IOError as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
 
-    print(Color.GREEN + " -> _main_ called")
+    while True:
+        prompt = input(Color.MAGENTA +
+                       "Enter your vision here: " + Color.RESET)
 
-    # get working directory from current_config.dat
-    with open("current_config.dat", 'r') as f:
-        working_dir = f.readline().strip()
+        new_prompt(prompt)
 
-    input_file = os.path.join(working_dir, "incoming.dat")
 
-    command_to_run = "echo 'done rendering'"
-    event_handler = NewLineHandler(command_to_run)
+        # load relevant configs
+        # load seed from seed.txt
+        if os.path.exists(os.path.join("output", "seed.txt")):
+            with open(os.path.join("output", "seed.txt"), 'r') as seed_file:
+                current_seed = int(seed_file.read())
+        else:
+            with open(os.path.join("output", "seed.txt"), 'w') as seed_file:
+                seed_file.write(str(current_seed))
 
-    # load relevant configs
-    # load seed from seed.txt
-    if os.path.exists(os.path.join(working_dir, "seed.txt")):
-        with open(os.path.join(working_dir, "seed.txt"), 'r') as seed_file:
-            current_seed = int(seed_file.read())
-    else:
-        with open(os.path.join(working_dir, "seed.txt"), 'w') as seed_file:
-            seed_file.write(str(current_seed))
+        last_line_count = 0
 
-    event_handler.last_line_count = 0
-    # set last line count to number of lines in incoming.dat
-    # with open(input_file, 'r') as file:
-    #     event_handler.last_line_count = len(file.readlines()) - 1
+        observer = Observer()
+        observer.schedule(event_handler, path='.', recursive=False)
+        observer.start()
 
-    observer = Observer()
-    observer.schedule(event_handler, path=working_dir, recursive=False)
-    observer.start()
-
-    print(f"Watching {input_file} for changes...")
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
+        print(f"Watching {input_file} for changes...")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
 
     observer.join()
+
+
+
