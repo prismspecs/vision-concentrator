@@ -6,6 +6,7 @@ import os
 import subprocess
 
 # translation
+from langdetect import detect
 from googletrans import Translator  
 
 class Color:
