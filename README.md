@@ -14,6 +14,13 @@ pip install -r requirements.txt
 pip install imageio[ffmpeg]
 ```
 
+## TensorRT
+Following https://sandner.art/tensorrt-200-speed-boost-with-a-catch-accelerating-neural-networks-for-image-generation-using-nvidia-technology/
+
+https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/secure/8.6.1/tars/TensorRT-8.6.1.6.Linux.x86_64-gnu.cuda-11.8.tar.gz
+
+
+
 ## Installation
 ```
 docker compose --profile download up --build
