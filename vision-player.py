@@ -25,7 +25,7 @@ while True:
     cv2.namedWindow(widow_name, cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty(
         widow_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-    cv2.moveWindow(widow_name,1600,0)
+    cv2.moveWindow(widow_name,1360,0)
 
     # wait until video file is loaded
     while (video.isOpened() == False):
