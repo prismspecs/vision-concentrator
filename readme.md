@@ -14,13 +14,6 @@ pip install -r requirements.txt
 pip install imageio[ffmpeg]
 ```
 
-## TensorRT
-Following https://sandner.art/tensorrt-200-speed-boost-with-a-catch-accelerating-neural-networks-for-image-generation-using-nvidia-technology/
-
-https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/secure/8.6.1/tars/TensorRT-8.6.1.6.Linux.x86_64-gnu.cuda-11.8.tar.gz
-
-
-
 ## Installation
 ```
 docker compose --profile download up --build
@@ -39,37 +32,21 @@ gnome-terminal --working-directory=/home/grayson/workbench/vision-concentrator -
 ./start.sh
 ```
 
-## Old method:
-First terminal:
-```bash
-docker compose --profile auto up
-```
+# Technical overview
+The start.sh script launches:
++ a Docker container which contains automatic1111
++ a Node.js server which has
+    + a command menu (to select/create active project) at http://127.0.0.1:3000
+    + an input interface for users to upload visions at http://127.0.0.1:3000/input
+        + new visions goto the project directory's incoming.dat file
++ a Python video player which constantly looks for updates to all_visions.mp4 and plays this file on a loop
++ a Python script (vision_concentrator.py) which monitors the project directory specified in current_config.dat for changes to incoming.dat, and sends these as requests to a1111
 
-Second terminal:
-```bash
-python3 vision-concentrator.py
-```
+## To do
+### Utilize TensorRT to speed up models
+Following https://sandner.art/tensorrt-200-speed-boost-with-a-catch-accelerating-neural-networks-for-image-generation-using-nvidia-technology/
 
-Third terminal:
-```bash
-python3 add-vision.py incoming.dat
-```
-
-Fourth terminal:
-```bash
-python3 vision-player.py
-```
-
-## Testing
-
-Add a new line to incoming.dat from terminal
-```bash
-echo -e "sample text\n$(cat incoming.dat)" > incoming.dat
-```
-Own the files created
-```bash
-sudo chown -R grayson .
-```
+https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/secure/8.6.1/tars/TensorRT-8.6.1.6.Linux.x86_64-gnu.cuda-11.8.tar.gz
 
 
 # Stable Diffusion WebUI Docker

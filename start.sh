@@ -4,13 +4,17 @@
 gnome-terminal --title "Docker" -- bash -c "docker compose --profile auto up; exec bash"
 
 # terminal 4: text input script (with larger font size and fullscreen)
-gnome-terminal --title "Add Vision" --zoom 3 --full-screen -- bash -c "python3 add-vision.py; exec bash" &
+# gnome-terminal --title "Add Vision" --zoom 3 --full-screen -- bash -c "python3 add-vision.py; exec bash"
+
+node index.js
+# open firefox to localhost:3000
+firefox localhost:3000
 
 # # terminal 2: vision-concentrator.py (main script)
-# gnome-terminal --title "Terminal 2 - Vision Concentrator" -- bash -c "python3 vision-concentrator.py; exec bash"
+gnome-terminal --title "Terminal 2 - Vision Concentrator" -- bash -c "python3 vision-concentrator.py; exec bash"
 
 # # terminal 3: video player
-# gnome-terminal --title "Terminal 3 - Video Player" -- bash -c "python3 vision-player.py; exec bash"
+gnome-terminal --title "Terminal 3 - Video Player" -- bash -c "python3 vision-player.py; exec bash"
 
 # # Introduce an x-second delay before opening the fourth terminal
 # sleep 3

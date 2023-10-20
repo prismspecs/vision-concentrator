@@ -51,15 +51,12 @@
 </head>
 
 <body>
-    <div id="old_commands">
 
+    <div id="old_commands"></div>
 
-    </div>
     <div id="text_area_container">
-        <textarea id="text_area" rows="1" class="terminal_input" placeholder="enter dream here..."></textarea>
+        <textarea id="text_area" rows="1" class="terminal_input" placeholder="enter you vision in any language..."></textarea>
     </div>
-
-    <!-- <input type="text" placeholder="enter dream here..."> -->
 
     <script>
 
@@ -81,9 +78,7 @@
                 d.prepend(p);
 
                 // save node.value as first line of textfile output/incoming.dat
-                
-                
-
+                sendText(node.value);
 
                 node.value = "";
                 change_height();
@@ -91,8 +86,26 @@
             }
         });
 
+        function sendText(incomingText) {
+            fetch('/appendIncoming', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ incomingText }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        // alert(`appended: ${data.incomingText}`);
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        }
 
-
+       
         function handle_terminal_input(elem) {  /* javascript */
 
             if (elem.key === 'Enter') {
