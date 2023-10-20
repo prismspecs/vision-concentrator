@@ -12,6 +12,9 @@ sudo apt install ffmpeg
 sudo apt install python3-pip
 pip install -r requirements.txt
 pip install imageio[ffmpeg]
+sudo apt install nodejs npm
+npm install express
+npm install --save @iamtraction/google-translate
 ```
 
 ## Installation
