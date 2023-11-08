@@ -6,9 +6,14 @@ import os
 widow_name = "window"
 videoFileName = "output/all_visions.mp4"
 
+def update_config():
+    with open("current_config.dat", "r") as f:
+        project_dir = f.read()
+        print("project_dir changed to: ", project_dir)
+        return project_dir
+
 # get directory from current_config.dat
-with open("current_config.dat", "r") as f:
-    project_dir = f.read()
+project_dir = update_config()
 
 videoFileName = os.path.join(project_dir, "all_visions.mp4")
 
@@ -42,6 +47,13 @@ while True:
                 isClose = True
                 break
         else:
+            break
+
+        # check if config has been updated
+        check_dir = update_config()
+        if check_dir != project_dir:
+            project_dir = check_dir
+            videoFileName = os.path.join(project_dir, "all_visions.mp4")
             break
     
         time.sleep(1 / 8)

@@ -336,13 +336,17 @@ class NewLineHandler(FileSystemEventHandler):
         subprocess.run(self.command, shell=True)
 
 
+def update_config():
+    with open("current_config.dat", 'r') as f:
+        working_dir = f.readline().strip()
+        return working_dir
+        
 if __name__ == "__main__":
 
     print(Color.GREEN + " -> _main_ called")
 
     # get working directory from current_config.dat
-    with open("current_config.dat", 'r') as f:
-        working_dir = f.readline().strip()
+    working_dir = update_config()
 
     input_file = os.path.join(working_dir, "incoming.dat")
 
@@ -366,10 +370,18 @@ if __name__ == "__main__":
     observer = Observer()
     observer.schedule(event_handler, path=working_dir, recursive=False)
     observer.start()
-
     print(f"Watching {input_file} for changes...")
     try:
         while True:
+            check_dir = update_config()
+            if check_dir != working_dir:
+                print(Color.RED + " -> config changed, restarting watcher")
+                observer.stop()
+                working_dir = check_dir
+                observer = Observer()
+                observer.schedule(event_handler, path=working_dir, recursive=False)
+                observer.start()
+                print(f"Watching {input_file} for changes...")
             time.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
