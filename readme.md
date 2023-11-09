@@ -1,20 +1,55 @@
 # Vision Concentrator art installation=
 forked with love from [Stable Diffusion WebUI docker](https://github.com/AbdBarho/stable-diffusion-webui-docker/)
-currently using google translate which requires a network connection, but I could in the future try dl-translate or argostranslate for offline translation
 
 # Setup & Install
 ## Requirements
-+ NVidia drivers
+```bash
+sudo ubuntu-drivers autoinstall
+sudo apt install ffmpeg python3-pip nodejs npm
+pip install -r requirements.txt
+npx express && npm install --save @iamtraction/google-translate
+```
 + Docker
+```bash
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# post install
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+
+# verify installation
+docker run hello-world
+
+```
 + NVidia container toolkit
 ```bash
-sudo apt install ffmpeg
-sudo apt install python3-pip
-pip install -r requirements.txt
-pip install imageio[ffmpeg]
-sudo apt install nodejs npm
-npm install express
-npm install --save @iamtraction/google-translate
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list \
+  && \
+    sudo apt-get update
+
+sudo apt-get install -y nvidia-container-toolkit
+
+# test installation
+sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
+
+
 ```
 
 ## Installation
@@ -43,68 +78,4 @@ The start.sh script launches:
     + an input interface for users to upload visions at http://127.0.0.1:3000/input
         + new visions goto the project directory's incoming.dat file
 + a Python video player which constantly looks for updates to all_visions.mp4 and plays this file on a loop
-+ a Python script (vision_concentrator.py) which monitors the project directory specified in current_config.dat for changes to incoming.dat, and sends these as requests to a1111
-
-## To do
-### Utilize TensorRT to speed up models
-Following https://sandner.art/tensorrt-200-speed-boost-with-a-catch-accelerating-neural-networks-for-image-generation-using-nvidia-technology/
-
-https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/secure/8.6.1/tars/TensorRT-8.6.1.6.Linux.x86_64-gnu.cuda-11.8.tar.gz
-
-
-# Stable Diffusion WebUI Docker
-
-Run Stable Diffusion on your machine with a nice UI without any hassle!
-
-## Setup & Usage
-
-Visit the wiki for [Setup](https://github.com/AbdBarho/stable-diffusion-webui-docker/wiki/Setup) and [Usage](https://github.com/AbdBarho/stable-diffusion-webui-docker/wiki/Usage) instructions, checkout the [FAQ](https://github.com/AbdBarho/stable-diffusion-webui-docker/wiki/FAQ) page if you face any problems, or create a new issue!
-
-## Features
-
-This repository provides multiple UIs for you to play around with stable diffusion:
-
-### [AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
-
-[Full feature list here](https://github.com/AUTOMATIC1111/stable-diffusion-webui-feature-showcase), Screenshots:
-
-| Text to image                                                                                              | Image to image                                                                                             | Extras                                                                                                     |
-| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| ![](https://user-images.githubusercontent.com/24505302/189541954-46afd772-d0c8-4005-874c-e2eca40c02f2.jpg) | ![](https://user-images.githubusercontent.com/24505302/189541956-5b528de7-1b5d-479f-a1db-d3f5a53afc59.jpg) | ![](https://user-images.githubusercontent.com/24505302/189541957-cf78b352-a071-486d-8889-f26952779a61.jpg) |
-
-### [InvokeAI](https://github.com/invoke-ai/InvokeAI)
-
-[Full feature list here](https://github.com/invoke-ai/InvokeAI#features), Screenshots:
-
-| Text to image                                                                                              | Image to image                                                                                             | Extras                                                                                                     |
-| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| ![](https://user-images.githubusercontent.com/24505302/195158552-39f58cb6-cfcc-4141-9995-a626e3760752.jpg) | ![](https://user-images.githubusercontent.com/24505302/195158553-152a0ab8-c0fd-4087-b121-4823bcd8d6b5.jpg) | ![](https://user-images.githubusercontent.com/24505302/195158548-e118206e-c519-4915-85d6-4c248eb10fc0.jpg) |
-
-### [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
-
-[Full feature list here](https://github.com/comfyanonymous/ComfyUI#features), Screenshot:
-
-| Workflow                                                                         |
-| -------------------------------------------------------------------------------- |
-| ![](https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png) |
-
-## Contributing
-
-Contributions are welcome! **Create a discussion first of what the problem is and what you want to contribute (before you implement anything)**
-
-## Disclaimer
-
-The authors of this project are not responsible for any content generated using this interface.
-
-This license of this software forbids you from sharing any content that violates any laws, produce any harm to a person, disseminate any personal information that would be meant for harm, spread misinformation and target vulnerable groups. For the full list of restrictions please read [the license](./LICENSE).
-
-## Thanks
-
-Special thanks to everyone behind these awesome projects, without them, none of this would have been possible:
-
-- [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
-- [InvokeAI](https://github.com/invoke-ai/InvokeAI)
-- [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
-- [CompVis/stable-diffusion](https://github.com/CompVis/stable-diffusion)
-- [Sygil-webui](https://github.com/Sygil-Dev/sygil-webui)
-- and many many more.
++ a Python script (vision_concentrator.py) which monitors the project directory specified in current_config.dat for changes to incoming.dat, and sends these as requests to A1111

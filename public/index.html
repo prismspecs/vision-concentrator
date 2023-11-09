@@ -2,12 +2,40 @@
 <html>
 
 <head>
-    <title>Vision Project Interface</title>
+    <title>Vision Concentrator Setup</title>
 </head>
+
+<style>
+    body {
+        font-size: 18px;
+        font-family:Arial, Helvetica, sans-serif;
+    }
+    ul {
+        list-style-position: inside;
+    }
+    * {
+        padding:.4rem;
+    }
+</style>
 
 <body>
     <div>
-        <h1>Vision Project Interface</h1>
+        <h1>Vision Concentrator Setup</h1>
+        <p>
+            <b>Instructions:</b>
+            <ul>
+                <li>
+                    Press f11 to enter fullscreen mode
+                </li>
+                <li>
+                    Press the TAB key on the keyboard to cycle between options on this screen (if you do not have a mouse).
+                </li>
+                <li>
+                    Once you have selected or created a project, cycle to "Go to Vision Input Screen" using the TAB key then press ENTER.
+                </li>
+            </ul>
+            
+        </p>
         <div>
             <label for="project-option">Choose an option:</label>
             <!-- do not cache the selection -->
@@ -26,16 +54,16 @@
             <select id="project-select"></select>
             <button onclick="selectProject()">Select Project</button>
         </div>
-        <a href="/input">go to vision input screen</a>
+        <a href="/input">Go to Vision Input Screen</a>
     </div>
     <script>
 
         // password protect this page
-        const password = prompt("Please enter the password to access this page.");
-        if (password !== "vision") {
-            alert("Incorrect password. Please try again.");
-            window.location.href = "/";
-        }
+        // const password = prompt("Please enter the password to access this page.");
+        // if (password !== "vision") {
+        //     alert("Incorrect password. Please try again.");
+        //     window.location.href = "/";
+        // }
 
 
         const createProjectDiv = document.getElementById("create-project");
@@ -44,77 +72,81 @@
         const projectOption = document.getElementById("project-option");
         const projectNameInput = document.getElementById("project-name");
 
-        // Fetch existing projects and populate the select dropdown
-        fetch('/getProjects')
-            .then((response) => response.json())
-            .then((projects) => {
-                projectSelect.innerHTML = "";
-                projects.forEach((project) => {
-                    const option = document.createElement("option");
-                    option.value = project;
-                    option.text = project;
-                    projectSelect.appendChild(option);
+        (function () {
+            // Fetch existing projects and populate the select dropdown
+            fetch('/getProjects')
+                .then((response) => response.json())
+                .then((projects) => {
+                    projectSelect.innerHTML = "";
+                    projects.forEach((project) => {
+                        const option = document.createElement("option");
+                        option.value = project;
+                        option.text = project;
+                        projectSelect.appendChild(option);
+                    });
+                })
+                .catch((error) => {
+                    console.error(error);
                 });
-            })
-            .catch((error) => {
-                console.error(error);
-            });
 
-        function createProject() {
-            const projectName = projectNameInput.value;
-            if (projectName) {
-                fetch('/createProject', {
+            function createProject() {
+                const projectName = projectNameInput.value;
+                if (projectName) {
+                    fetch('/createProject', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ projectName }),
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.success) {
+                                alert(`Created a new project: ${data.projectDir}`);
+                            } else {
+                                alert(data.message);
+                            }
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                        });
+                }
+            }
+
+            function selectProject() {
+                const selectedProject = projectSelect.value;
+                fetch('/selectProject', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ projectName }),
+                    body: JSON.stringify({ selectedProject }),
                 })
                     .then((response) => response.json())
                     .then((data) => {
                         if (data.success) {
-                            alert(`Created a new project: ${data.projectDir}`);
-                        } else {
-                            alert(data.message);
+                            alert(`Selected an existing project: ${data.projectDir}`);
                         }
                     })
                     .catch((error) => {
                         console.error(error);
                     });
             }
-        }
 
-        function selectProject() {
-            const selectedProject = projectSelect.value;
-            fetch('/selectProject', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ selectedProject }),
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.success) {
-                        alert(`Selected an existing project: ${data.projectDir}`);
-                    }
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-        }
+            // Show/hide relevant sections based on the selected option
+            projectOption.addEventListener('change', () => {
+                const selectedOption = projectOption.value;
+                if (selectedOption === "create") {
+                    createProjectDiv.style.display = "block";
+                    existingProjectsDiv.style.display = "none";
+                } else if (selectedOption === "select") {
+                    createProjectDiv.style.display = "none";
+                    existingProjectsDiv.style.display = "block";
+                }
+            });
 
-        // Show/hide relevant sections based on the selected option
-        projectOption.addEventListener('change', () => {
-            const selectedOption = projectOption.value;
-            if (selectedOption === "create") {
-                createProjectDiv.style.display = "block";
-                existingProjectsDiv.style.display = "none";
-            } else if (selectedOption === "select") {
-                createProjectDiv.style.display = "none";
-                existingProjectsDiv.style.display = "block";
-            }
-        });
+           
+        })();
     </script>
 </body>
 
