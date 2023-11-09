@@ -1,3 +1,5 @@
+current_config.dat
+
 /.devcontainer
 /docker-compose.override.yml
 
