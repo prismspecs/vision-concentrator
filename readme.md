@@ -7,7 +7,7 @@ forked with love from [Stable Diffusion WebUI docker](https://github.com/AbdBarh
 sudo ubuntu-drivers autoinstall
 sudo apt install ffmpeg python3-pip nodejs npm
 pip install -r requirements.txt
-npx express && npm install --save @iamtraction/google-translate
+npm install express && npm install --save @iamtraction/google-translate
 ```
 + Docker
 ```bash
