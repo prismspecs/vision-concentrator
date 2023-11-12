@@ -75,7 +75,8 @@
         const projectOption = document.getElementById("project-option");
         const projectNameInput = document.getElementById("project-name");
 
-        (function () {
+
+        function fetchProjects() {
             // Fetch existing projects and populate the select dropdown
             fetch('/getProjects')
                 .then((response) => response.json())
@@ -91,6 +92,10 @@
                 .catch((error) => {
                     console.error(error);
                 });
+        }
+        (function () {
+
+            fetchProjects();
 
             // Show/hide relevant sections based on the selected option
             projectOption.addEventListener('change', () => {
@@ -121,6 +126,7 @@
                     .then((data) => {
                         if (data.success) {
                             alert(`Created a new project: ${data.projectDir}`);
+                            fetchProjects()
                         } else {
                             alert(data.message);
                         }
@@ -128,6 +134,8 @@
                     .catch((error) => {
                         console.error(error);
                     });
+            } else {
+                alert("Please enter a project name.");
             }
         }
 
