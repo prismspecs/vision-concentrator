@@ -45,7 +45,7 @@ COPY requirements_versions.txt /requirements_versions.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
   git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
   cd stable-diffusion-webui && \
-  git reset --hard 20ae71faa8ef035c31aa3a410b707d792c8203a3 && \
+  git reset --hard 4afaaf8a020c1df457bcf7250cb1c7f609699fa7 && \
   pip install -r /requirements_versions.txt
 
 RUN --mount=type=cache,target=/root/.cache/pip  \
@@ -81,7 +81,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
   pip install -r requirements_versions.txt \
   pip install -U pip && \
   pip install -U httpcore && \
-  pip3 install httpx==0.24.1
+  pip install httpx==0.24.1 && \
+  pip install torch==2.0.1+cu118 --index-url https://download.pytorch.org/whl/cu118
 COPY . /docker
 
 RUN \
