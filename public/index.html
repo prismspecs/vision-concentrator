@@ -8,13 +8,15 @@
 <style>
     body {
         font-size: 18px;
-        font-family:Arial, Helvetica, sans-serif;
+        font-family: Arial, Helvetica, sans-serif;
     }
+
     ul {
         list-style-position: inside;
     }
+
     * {
-        padding:.4rem;
+        padding: .4rem;
     }
 </style>
 
@@ -23,18 +25,19 @@
         <h1>Vision Concentrator Setup</h1>
         <p>
             <b>Instructions:</b>
-            <ul>
-                <li>
-                    Press f11 to enter fullscreen mode
-                </li>
-                <li>
-                    Press the TAB key on the keyboard to cycle between options on this screen (if you do not have a mouse).
-                </li>
-                <li>
-                    Once you have selected or created a project, cycle to "Go to Vision Input Screen" using the TAB key then press ENTER.
-                </li>
-            </ul>
-            
+        <ul>
+            <li>
+                Press f11 to enter fullscreen mode
+            </li>
+            <li>
+                Press the TAB key on the keyboard to cycle between options on this screen (if you do not have a mouse).
+            </li>
+            <li>
+                Once you have selected or created a project, cycle to "Go to Vision Input Screen" using the TAB key then
+                press ENTER.
+            </li>
+        </ul>
+
         </p>
         <div>
             <label for="project-option">Choose an option:</label>
@@ -89,50 +92,6 @@
                     console.error(error);
                 });
 
-            function createProject() {
-                const projectName = projectNameInput.value;
-                if (projectName) {
-                    fetch('/createProject', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ projectName }),
-                    })
-                        .then((response) => response.json())
-                        .then((data) => {
-                            if (data.success) {
-                                alert(`Created a new project: ${data.projectDir}`);
-                            } else {
-                                alert(data.message);
-                            }
-                        })
-                        .catch((error) => {
-                            console.error(error);
-                        });
-                }
-            }
-
-            function selectProject() {
-                const selectedProject = projectSelect.value;
-                fetch('/selectProject', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ selectedProject }),
-                })
-                    .then((response) => response.json())
-                    .then((data) => {
-                        if (data.success) {
-                            alert(`Selected an existing project: ${data.projectDir}`);
-                        }
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                    });
-            }
-
             // Show/hide relevant sections based on the selected option
             projectOption.addEventListener('change', () => {
                 const selectedOption = projectOption.value;
@@ -145,8 +104,52 @@
                 }
             });
 
-           
+
         })();
+
+        function createProject() {
+            const projectName = projectNameInput.value;
+            if (projectName) {
+                fetch('/createProject', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ projectName }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.success) {
+                            alert(`Created a new project: ${data.projectDir}`);
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
+            }
+        }
+
+        function selectProject() {
+            const selectedProject = projectSelect.value;
+            fetch('/selectProject', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ selectedProject }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        alert(`Selected an existing project: ${data.projectDir}`);
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
+        }
     </script>
 </body>
 

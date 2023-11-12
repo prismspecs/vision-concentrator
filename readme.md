@@ -7,7 +7,7 @@ forked with love from [Stable Diffusion WebUI docker](https://github.com/AbdBarh
 sudo ubuntu-drivers autoinstall
 sudo apt install ffmpeg python3-pip nodejs npm
 pip install -r requirements.txt
-npx express && npm install --save @iamtraction/google-translate
+npm install express && npm install --save @iamtraction/google-translate
 ```
 + Docker
 ```bash
@@ -45,6 +45,10 @@ curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dear
     sudo apt-get update
 
 sudo apt-get install -y nvidia-container-toolkit
+
+sudo nvidia-ctk runtime configure --runtime=docker
+
+sudo systemctl restart docker
 
 # test installation
 sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
