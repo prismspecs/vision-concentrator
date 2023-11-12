@@ -171,7 +171,7 @@ class NewLineHandler(FileSystemEventHandler):
         # payload for seed travel
         payload = {
             "prompt": current_prompt,
-            "negative_prompt": "nsfw, text",
+            "negative_prompt": "nsfw, text, disfigured, cartoon, blurry, nude, bad anatomy, bad proportions, cropped, deformed, dehydrated, disfigured, duplicate",
             "seed": current_seed,
             "width": SCALED_WIDTH,
             "height": SCALED_HEIGHT,

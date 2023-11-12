@@ -19,6 +19,11 @@ app.get('/', (req, res) => {
 // Serve the input page (input.html)
 app.get('/input', (req, res) => {
     res.sendFile(__dirname + '/public/input.html');
+
+    // set projectDir
+    // get projectName from current_config.dat
+    projectDir = fs.readFileSync(configFilePath, 'utf-8');
+    console.log("loaded projectDir: " + projectDir);
 });
 
 // Retrieve existing projects
